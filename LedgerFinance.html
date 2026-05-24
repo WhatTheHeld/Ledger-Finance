@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ledger Finance</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --gold:#C9A84C;--gold-light:#E8C97A;--gold-dim:#8A6E2F;
+  --bg-base:#0A0A0B;--bg-surface:#111113;--bg-card:#16161A;
+  --bg-elevated:#1C1C22;--border:#2A2A32;--border-light:#353540;
+  --text-primary:#F0EDE8;--text-secondary:#8A8794;--text-muted:#4A4857;
+  --green:#2ECC8A;--red:#E05A5A;--blue:#5A8AE0;--purple:#9B7FE8;
+  --radius:10px;--radius-lg:16px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;width:100%;overflow:hidden;}
+body{background:var(--bg-base);color:var(--text-primary);font-family:'DM Mono',monospace;font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg-surface);}
+::-webkit-scrollbar-thumb{background:var(--border-light);border-radius:3px;}
+button{cursor:pointer;font-family:'DM Mono',monospace;border:none;outline:none;transition:all 0.18s ease;}
+input,select,textarea{font-family:'DM Mono',monospace;background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-primary);padding:10px 14px;border-radius:var(--radius);font-size:13px;outline:none;transition:border-color 0.2s;width:100%;}
+input:focus,select:focus{border-color:var(--gold-dim);box-shadow:0 0 0 3px rgba(201,168,76,0.08);}
+input::placeholder{color:var(--text-muted);}
+select option{background:var(--bg-card);}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+@keyframes slideIn{from{opacity:0;transform:scale(0.97);}to{opacity:1;transform:scale(1);}}
+
+#app{display:flex;height:100vh;overflow:hidden;}
+#sidebar{width:220px;background:var(--bg-surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;}
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+#topbar{padding:18px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg-surface);}
+#content{flex:1;overflow-y:auto;padding:28px;}
+
+.logo{padding:22px 20px;border-bottom:1px solid var(--border);}
+.logo-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:-0.02em;}
+.logo-title span{color:var(--gold);}
+.logo-title em{color:var(--text-secondary);font-style:normal;font-weight:400;}
+.logo-sub{font-size:10px;color:var(--text-muted);letter-spacing:0.1em;text-transform:uppercase;margin-top:2px;}
+nav{padding:12px 10px;flex:1;}
+.nav-btn{width:100%;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius);margin-bottom:2px;background:transparent;border:1px solid transparent;color:var(--text-secondary);font-family:'DM Mono',monospace;font-size:13px;text-align:left;}
+.nav-btn:hover{background:var(--bg-elevated);color:var(--text-primary);}
+.nav-btn.active{background:var(--bg-elevated);border-color:var(--border-light);color:var(--gold);}
+.nav-dot{margin-left:auto;width:4px;height:4px;border-radius:50%;background:var(--gold);}
+.sidebar-footer{padding:14px 20px;border-top:1px solid var(--border);font-size:10px;color:var(--text-muted);letter-spacing:0.06em;}
+
+.page-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;text-transform:capitalize;}
+.page-sub{font-size:11px;color:var(--text-muted);}
+.topbar-meta{font-size:12px;color:var(--text-muted);}
+
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;}
+.card-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:18px;color:var(--text-primary);}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+.metric{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px 24px;position:relative;overflow:hidden;animation:fadeIn 0.4s ease forwards;}
+.metric-glow{position:absolute;top:0;right:0;width:80px;height:80px;border-radius:0 var(--radius-lg) 0 80px;}
+.metric-label{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.metric-icon{font-size:18px;}
+.metric-name{font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-secondary);}
+.metric-value{font-family:'Syne',sans-serif;font-size:26px;font-weight:700;letter-spacing:-0.02em;}
+.metric-sub{font-size:12px;color:var(--text-muted);margin-top:4px;}
+
+.tag{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;letter-spacing:0.04em;}
+.tag-income{background:rgba(46,204,138,0.12);color:var(--green);border:1px solid rgba(46,204,138,0.2);}
+.tag-expense{background:rgba(224,90,90,0.12);color:var(--red);border:1px solid rgba(224,90,90,0.2);}
+.tag-transfer{background:rgba(155,127,232,0.12);color:var(--purple);border:1px solid rgba(155,127,232,0.2);}
+.tag-paid{background:rgba(46,204,138,0.12);color:var(--green);border:1px solid rgba(46,204,138,0.2);}
+.tag-pending{background:rgba(201,168,76,0.12);color:var(--gold);border:1px solid rgba(201,168,76,0.2);}
+
+.btn-primary{background:var(--gold);color:#0A0A0B;padding:10px 20px;border-radius:var(--radius);font-size:13px;font-weight:500;}
+.btn-primary:hover{background:var(--gold-light);transform:translateY(-1px);box-shadow:0 0 20px rgba(201,168,76,0.2);}
+.btn-secondary{background:var(--bg-elevated);color:var(--text-primary);padding:10px 20px;border-radius:var(--radius);border:1px solid var(--border);font-size:13px;}
+.btn-secondary:hover{border-color:var(--gold-dim);color:var(--gold);}
+.btn-ghost{background:transparent;color:var(--text-secondary);padding:7px 14px;border-radius:var(--radius);font-size:12px;border:1px solid transparent;}
+.btn-ghost:hover{background:var(--bg-elevated);color:var(--text-primary);}
+.btn-ghost.active{background:var(--gold);color:#0A0A0B;border-color:transparent;}
+.btn-danger{background:transparent;color:var(--text-muted);padding:5px 9px;border-radius:8px;font-size:13px;border:1px solid transparent;}
+.btn-danger:hover{background:rgba(224,90,90,0.1);color:var(--red);border-color:rgba(224,90,90,0.2);}
+
+.table-wrap{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+.table-head{display:grid;padding:12px 20px;background:var(--bg-elevated);border-bottom:1px solid var(--border);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);}
+.table-row{display:grid;padding:13px 20px;border-bottom:1px solid var(--border);align-items:center;transition:background 0.15s;}
+.table-row:last-child{border-bottom:none;}
+.table-row:hover{background:var(--bg-elevated);}
+.tx-grid{grid-template-columns:110px 1fr 150px 110px 50px;}
+
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px 20px;color:var(--text-muted);text-align:center;gap:6px;}
+.empty-icon{font-size:32px;opacity:0.4;margin-bottom:4px;}
+.empty-title{font-family:'Syne',sans-serif;font-size:15px;color:var(--text-secondary);}
+
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:999;animation:fadeIn 0.2s ease;}
+.modal{background:var(--bg-card);border:1px solid var(--border-light);border-radius:var(--radius-lg);padding:28px;width:500px;max-width:92vw;animation:slideIn 0.25s ease;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;}
+.modal-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;}
+.modal-close{background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-secondary);width:32px;height:32px;border-radius:8px;font-size:16px;display:flex;align-items:center;justify-content:center;}
+.modal-close:hover{color:var(--text-primary);}
+.form-group{margin-bottom:15px;}
+.form-label{display:block;font-size:11px;font-weight:500;letter-spacing:0.08em;color:var(--text-secondary);text-transform:uppercase;margin-bottom:6px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-actions{display:flex;gap:10px;margin-top:20px;}
+
+/* Category input with custom toggle */
+.cat-wrap{position:relative;}
+.cat-custom-row{display:flex;gap:8px;margin-top:8px;align-items:center;}
+.cat-custom-row input{flex:1;}
+.cat-hint{font-size:11px;color:var(--text-muted);margin-top:5px;}
+
+.bar-wrap{margin-bottom:13px;}
+.bar-label{display:flex;justify-content:space-between;margin-bottom:5px;font-size:12px;color:var(--text-secondary);}
+.bar-track{height:5px;background:var(--bg-elevated);border-radius:3px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gold-dim),var(--gold));transition:width 0.7s cubic-bezier(.22,1,.36,1);}
+
+.inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
+.inv-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;position:relative;overflow:hidden;animation:fadeIn 0.3s ease forwards;}
+.inv-glow{position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 var(--radius-lg) 0 60px;}
+.inv-num{font-size:11px;color:var(--text-muted);margin-top:2px;}
+.inv-client{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;}
+.inv-desc{font-size:12px;color:var(--text-secondary);margin:10px 0;}
+.inv-amount{font-family:'Syne',sans-serif;font-size:24px;font-weight:700;color:var(--gold);margin:12px 0;}
+.inv-due{font-size:11px;color:var(--text-muted);margin-bottom:14px;}
+.inv-actions{display:flex;gap:8px;}
+
+.report-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;}
+.report-stat{background:var(--bg-elevated);border-radius:var(--radius);padding:16px;}
+.report-stat-label{font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;}
+.report-stat-value{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;}
+
+.type-toggle{display:flex;gap:8px;margin-bottom:15px;}
+.type-btn{flex:1;padding:10px;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:13px;border:1px solid var(--border);background:var(--bg-elevated);color:var(--text-secondary);cursor:pointer;transition:all 0.18s;}
+.type-btn.income.active{background:rgba(46,204,138,0.12);border-color:var(--green);color:var(--green);}
+.type-btn.expense.active{background:rgba(224,90,90,0.12);border-color:var(--red);color:var(--red);}
+.type-btn.transfer.active{background:rgba(155,127,232,0.12);border-color:var(--purple);color:var(--purple);}
+
+.recent-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
+.recent-row:last-child{border-bottom:none;}
+.recent-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.recent-info{margin-left:10px;flex:1;}
+.recent-name{font-size:13px;font-weight:500;}
+.recent-date{font-size:11px;color:var(--text-muted);}
+.recent-amount{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;}
+
+.month-row{margin-bottom:14px;}
+.month-label{font-size:11px;color:var(--text-muted);margin-bottom:5px;}
+.month-bars{display:flex;gap:8px;align-items:center;}
+.month-tracks{flex:1;}
+.month-bar{height:5px;background:var(--bg-elevated);border-radius:3px;overflow:hidden;margin-bottom:3px;}
+.month-bar-fill{height:100%;border-radius:3px;}
+.month-vals{font-size:11px;min-width:90px;text-align:right;}
+
+.filter-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.filter-btns{display:flex;gap:6px;}
+
+/* Balance banner */
+.balance-banner{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 22px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:20px;}
+.balance-item{display:flex;flex-direction:column;gap:2px;}
+.balance-label{font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);}
+.balance-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;}
+.balance-divider{width:1px;height:36px;background:var(--border);}
+.balance-edit-btn{background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-secondary);padding:7px 14px;border-radius:var(--radius);font-size:12px;font-family:'DM Mono',monospace;cursor:pointer;transition:all 0.18s;}
+.balance-edit-btn:hover{border-color:var(--gold-dim);color:var(--gold);}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside id="sidebar">
+    <div class="logo">
+      <div class="logo-title"><span>Ledger</span> <em>Finance</em></div>
+      <div class="logo-sub">Business Accounting</div>
+    </div>
+    <nav id="nav"></nav>
+    <div class="sidebar-footer" style="display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;gap:6px">
+        <button onclick="exportData()" style="flex:1;background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-secondary);padding:7px 8px;border-radius:var(--radius);font-size:11px;font-family:'DM Mono',monospace;cursor:pointer;transition:all 0.18s" onmouseover="this.style.borderColor='var(--gold-dim)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'">↓ Export</button>
+        <button onclick="importData()" style="flex:1;background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-secondary);padding:7px 8px;border-radius:var(--radius);font-size:11px;font-family:'DM Mono',monospace;cursor:pointer;transition:all 0.18s" onmouseover="this.style.borderColor='var(--gold-dim)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'">↑ Import</button>
+      </div>
+      <div>● LOCALSTORAGE · v1.2.0</div>
+    </div>
+    <input type="file" id="import-file" accept=".json" style="display:none" onchange="handleImportFile(event)"/>
+  </aside>
+  <main id="main">
+    <header id="topbar">
+      <div>
+        <div class="page-title" id="page-title">Dashboard</div>
+        <div class="page-sub" id="page-date"></div>
+      </div>
+      <div class="topbar-meta" id="topbar-meta"></div>
+    </header>
+    <div id="content"></div>
+  </main>
+</div>
+<div class="overlay" id="modal" style="display:none">
+  <div class="modal" id="modal-inner"></div>
+</div>
+
+<script>
+// ── Storage ───────────────────────────────────────────────────────────────────
+const LS={
+  get:(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}},
+  set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+}
+
+const DB={
+  transactions(){ return LS.get('lf_tx',[]) },
+  addTx(t){ const txs=this.transactions(); const e={...t,id:Date.now(),created_at:new Date().toISOString()}; LS.set('lf_tx',[...txs,e]); return e },
+  delTx(id){ LS.set('lf_tx',this.transactions().filter(t=>t.id!==id)) },
+  updateTx(id,changes){ LS.set('lf_tx',this.transactions().map(t=>t.id===id?{...t,...changes}:t)) },
+  invoices(){ return LS.get('lf_inv',[]) },
+  addInv(i){ const invs=this.invoices(); const e={...i,id:Date.now(),created_at:new Date().toISOString(),status:'pending'}; LS.set('lf_inv',[...invs,e]); return e },
+  updateInv(id,status){ LS.set('lf_inv',this.invoices().map(i=>i.id===id?{...i,status}:i)) },
+  delInv(id){ LS.set('lf_inv',this.invoices().filter(i=>i.id!==id)) },
+  getStartingBalance(){ return LS.get('lf_starting_balance', 0) },
+  setStartingBalance(v){ LS.set('lf_starting_balance', Number(v)) },
+  getCustomCategories(){ return LS.get('lf_custom_cats', {income:[], expense:[], transfer:[]}) },
+  addCustomCategory(type, cat){
+    const c=this.getCustomCategories()
+    const key=type.startsWith('transfer')?'transfer':type
+    if(!c[key]) c[key]=[]
+    if(!c[key].includes(cat)) c[key].push(cat)
+    LS.set('lf_custom_cats', c)
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const fmt=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(n??0)
+const fmtD=d=>{if(!d)return'—';return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
+
+const BASE_CATS={
+  income:['Sales Revenue','Service Income','Consulting','Other Income'],
+  expense:['Rent','Utilities','Supplies','Marketing','Payroll','Software','Travel','Meals','Insurance','Taxes','Other Expense'],
+  transfer_in:['Incoming Transfer','Savings Withdrawal','Loan Received','Refund','Other Transfer In'],
+  transfer_out:['Outgoing Transfer','Savings Deposit','Loan Payment','Investment','Other Transfer Out']
+}
+
+function getCats(type){
+  // map transfer_in/out to 'transfer' for custom categories lookup
+  const catKey=type.startsWith('transfer')?'transfer':type
+  const custom=DB.getCustomCategories()[catKey]||[]
+  return [...(BASE_CATS[type]||BASE_CATS['transfer_out']), ...custom]
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+function showModal(html){ const m=document.getElementById('modal'); document.getElementById('modal-inner').innerHTML=html; m.style.display='flex'; m.onclick=e=>{if(e.target===m)closeModal()} }
+function closeModal(){ document.getElementById('modal').style.display='none' }
+
+// ── Nav ───────────────────────────────────────────────────────────────────────
+const pages=[
+  {id:'dashboard',label:'Dashboard',icon:'▦'},
+  {id:'transactions',label:'Transactions',icon:'⇄'},
+  {id:'invoices',label:'Invoices',icon:'◫'},
+  {id:'reports',label:'Reports',icon:'▤'},
+]
+let currentPage='dashboard'
+
+function renderNav(){
+  document.getElementById('nav').innerHTML=pages.map(p=>`
+    <button class="nav-btn${currentPage===p.id?' active':''}" onclick="navigate('${p.id}')">
+      <span style="font-size:15px">${p.icon}</span>${p.label}
+      ${currentPage===p.id?'<span class="nav-dot"></span>':''}
+    </button>`).join('')
+}
+
+function navigate(page){ currentPage=page; document.getElementById('page-title').textContent=page; renderNav(); renderPage() }
+
+function updateTopbar(){
+  const tx=DB.transactions(),inv=DB.invoices()
+  document.getElementById('page-date').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})
+  document.getElementById('topbar-meta').textContent=`${tx.length} transactions · ${inv.length} invoices`
+}
+
+// ── Category builder HTML ─────────────────────────────────────────────────────
+function catSelectHTML(type, selectedId='tx-cat'){
+  const cats=getCats(type)
+  return `
+    <select id="${selectedId}">
+      <option value="">Select category</option>
+      ${cats.map(c=>`<option value="${c}">${c}</option>`).join('')}
+      <option value="__custom__">+ Add custom category...</option>
+    </select>
+    <div id="custom-cat-row" style="display:none;margin-top:8px">
+      <div style="display:flex;gap:8px">
+        <input type="text" id="custom-cat-input" placeholder="Enter custom category name..."/>
+        <button class="btn-secondary" style="white-space:nowrap;padding:10px 14px" onclick="confirmCustomCat('${type}','${selectedId}')">Add</button>
+      </div>
+      <div class="cat-hint">This category will be saved for future use</div>
+    </div>`
+}
+
+function watchCatSelect(selectId){
+  const sel=document.getElementById(selectId)
+  if(!sel) return
+  sel.onchange=function(){
+    const row=document.getElementById('custom-cat-row')
+    if(this.value==='__custom__'){ row.style.display='block'; this.value=''; }
+    else { row.style.display='none' }
+  }
+}
+
+function confirmCustomCat(type, selectId){
+  const inp=document.getElementById('custom-cat-input')
+  const val=(inp.value||'').trim()
+  if(!val) return
+  DB.addCustomCategory(type, val)
+  const sel=document.getElementById(selectId)
+  const opt=document.createElement('option')
+  opt.value=val; opt.textContent=val; opt.selected=true
+  // insert before the __custom__ option
+  const customOpt=sel.querySelector('option[value="__custom__"]')
+  sel.insertBefore(opt, customOpt)
+  sel.value=val
+  document.getElementById('custom-cat-row').style.display='none'
+  inp.value=''
+}
+
+// ── Starting Balance ──────────────────────────────────────────────────────────
+function showEditBalance(){
+  const current=DB.getStartingBalance()
+  showModal(`
+    <div class="modal-header">
+      <span class="modal-title">Starting Balance</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:20px;line-height:1.7">
+      Set your account's starting balance. This is the amount you had before tracking transactions in this app. It will be added to your running balance calculations.
+    </p>
+    <div class="form-group">
+      <label class="form-label">Starting Balance</label>
+      <input type="number" id="bal-input" value="${current}" placeholder="0.00" step="0.01"/>
+    </div>
+    <div class="form-actions">
+      <button class="btn-secondary" style="flex:1" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" style="flex:2" onclick="saveBalance()">Save Balance</button>
+    </div>`)
+  window.saveBalance=function(){
+    const v=parseFloat(document.getElementById('bal-input').value)||0
+    DB.setStartingBalance(v)
+    closeModal(); renderPage()
+  }
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+function renderDashboard(){
+  const tx=DB.transactions(),inv=DB.invoices()
+  const startBal=DB.getStartingBalance()
+
+  const income=tx.filter(t=>t.type==='income').reduce((s,t)=>s+Number(t.amount),0)
+  const expenses=tx.filter(t=>t.type==='expense').reduce((s,t)=>s+Number(t.amount),0)
+  const transferIn=tx.filter(t=>t.type==='transfer_in').reduce((s,t)=>s+Number(t.amount),0)
+  const transferOut=tx.filter(t=>t.type==='transfer_out').reduce((s,t)=>s+Number(t.amount),0)
+  const profit=income-expenses
+  const currentBal=startBal+profit+transferIn-transferOut
+
+  const pendingAmt=inv.filter(i=>i.status==='pending').reduce((s,i)=>s+Number(i.amount),0)
+  const pendingCount=inv.filter(i=>i.status==='pending').length
+
+  const metrics=[
+    {label:'Total Income',value:fmt(income),icon:'↑',accent:'var(--green)'},
+    {label:'Total Expenses',value:fmt(expenses),icon:'↓',accent:'var(--red)'},
+    {label:'Net Profit',value:fmt(profit),icon:'◈',accent:profit>=0?'var(--green)':'var(--red)'},
+    {label:'Pending Invoices',value:fmt(pendingAmt),icon:'◷',accent:'var(--gold)',sub:`${pendingCount} unpaid`},
+  ]
+
+  const recent=[...tx].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,6)
+
+  const expBreak={}
+  tx.filter(t=>t.type==='expense').forEach(t=>{ expBreak[t.category]=(expBreak[t.category]??0)+Number(t.amount) })
+  const expEntries=Object.entries(expBreak).sort((a,b)=>b[1]-a[1]).slice(0,5)
+  const maxExp=expEntries[0]?.[1]??1
+
+  const txfrMap={}
+  tx.filter(t=>t.type==='transfer_in'||t.type==='transfer_out').forEach(t=>{
+    if(!txfrMap[t.category]) txfrMap[t.category]={amt:0,type:t.type}
+    txfrMap[t.category].amt+=Number(t.amount)
+  })
+  const txfrEntries=Object.entries(txfrMap).sort((a,b)=>b[1].amt-a[1].amt).slice(0,5)
+  const maxTxfr=txfrEntries[0]?.[1]?.amt??1
+
+  const typeColor={income:'var(--green)',expense:'var(--red)',transfer_in:'var(--purple)',transfer_out:'var(--purple)'}
+  const typeIcon={income:'↑',expense:'↓',transfer_in:'⇌↑',transfer_out:'⇌↓'}
+  const typeBg={income:'rgba(46,204,138,0.1)',expense:'rgba(224,90,90,0.1)',transfer_in:'rgba(155,127,232,0.1)',transfer_out:'rgba(155,127,232,0.1)'}
+
+  document.getElementById('content').innerHTML=`
+    <div class="balance-banner">
+      <div class="balance-item">
+        <div class="balance-label">Starting Balance</div>
+        <div class="balance-val" style="color:var(--text-secondary)">${fmt(startBal)}</div>
+      </div>
+      <div class="balance-divider"></div>
+      <div class="balance-item">
+        <div class="balance-label">Income − Expenses</div>
+        <div class="balance-val" style="color:${profit>=0?'var(--green)':'var(--red)'}">${profit>=0?'+':''}${fmt(profit)}</div>
+      </div>
+      <div class="balance-divider"></div>
+      <div class="balance-item">
+        <div class="balance-label">Transfers Net</div>
+        <div class="balance-val" style="color:var(--purple)">${(transferIn-transferOut)>=0?'+':''}${fmt(transferIn-transferOut)}</div>
+      </div>
+      <div class="balance-divider"></div>
+      <div class="balance-item">
+        <div class="balance-label">Current Balance</div>
+        <div class="balance-val" style="color:${currentBal>=0?'var(--gold)':'var(--red)'}">${fmt(currentBal)}</div>
+      </div>
+      <button class="balance-edit-btn" onclick="showEditBalance()">✎ Edit Starting Balance</button>
+    </div>
+
+    <div class="grid-4" style="margin-bottom:20px">
+      ${metrics.map(m=>`
+        <div class="metric">
+          <div class="metric-glow" style="background:radial-gradient(circle at top right,${m.accent}18,transparent 70%)"></div>
+          <div class="metric-label"><span class="metric-icon" style="color:${m.accent}">${m.icon}</span><span class="metric-name">${m.label}</span></div>
+          <div class="metric-value" style="color:${m.accent==='var(--gold)'?'var(--text-primary)':m.accent}">${m.value}</div>
+          ${m.sub?`<div class="metric-sub">${m.sub}</div>`:''}        </div>`).join('')}
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+      <div class="card">
+        <div class="card-title">Recent Transactions</div>
+        ${recent.length===0
+          ?`<div class="empty"><div class="empty-icon">⇄</div><div class="empty-title">No transactions yet</div></div>`
+          :recent.map(t=>`
+          <div class="recent-row">
+            <div class="recent-icon" style="background:${typeBg[t.type]||'rgba(74,72,87,0.2)'};color:${typeColor[t.type]||'var(--text-secondary)'}"> ${typeIcon[t.type]||'·'}</div>
+            <div class="recent-info">
+              <div class="recent-name">${t.description||t.category}</div>
+              <div class="recent-date">${fmtD(t.date||t.created_at)}</div>
+            </div>
+            <div class="recent-amount" style="color:${typeColor[t.type]||'var(--text-secondary)'}">
+              ${t.type==='income'?'+':t.type==='expense'?'-':t.type==='transfer_in'?'⇌↑':'⇌↓'}${fmt(t.amount)}
+            </div>
+          </div>`).join('')}
+      </div>
+
+      <div class="card">
+        <div class="card-title">Expense Breakdown</div>
+        ${expEntries.length===0
+          ?`<div class="empty"><div class="empty-icon">▤</div><div class="empty-title">No expenses yet</div></div>`
+          :expEntries.map(([cat,amt])=>`
+          <div class="bar-wrap">
+            <div class="bar-label"><span>${cat}</span><span style="color:var(--text-primary);font-weight:500">${fmt(amt)}</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width:${(amt/maxExp)*100}%"></div></div>
+          </div>`).join('')}
+      </div>
+
+      <div class="card">
+        <div class="card-title">Transfer Breakdown</div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+          <div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:4px">⇌↑ In</div>
+            <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--purple)">+${fmt(transferIn)}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:4px">⇌↓ Out</div>
+            <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--purple)">-${fmt(transferOut)}</div>
+          </div>
+        </div>
+        ${txfrEntries.length===0
+          ?`<div class="empty" style="padding:10px"><div class="empty-title">No transfers yet</div></div>`
+          :txfrEntries.map(([cat,{amt,type}])=>`
+          <div class="bar-wrap">
+            <div class="bar-label">
+              <span style="color:var(--purple)">${type==='transfer_in'?'⇌↑':'⇌↓'} ${cat}</span>
+              <span style="color:var(--text-primary);font-weight:500">${fmt(amt)}</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill" style="width:${(amt/maxTxfr)*100}%;background:linear-gradient(90deg,rgba(155,127,232,0.4),var(--purple))"></div></div>
+          </div>`).join('')}
+      </div>
+    </div>`
+}
+
+
+// ── Transactions ──────────────────────────────────────────────────────────────
+let txFilter='all'
+function renderTransactions(){
+  const tx=DB.transactions()
+  const startBal=DB.getStartingBalance()
+  const filtered=tx.filter(t=>txFilter==='all'||t.type===txFilter)
+    .sort((a,b)=>new Date(b.date||b.created_at)-new Date(a.date||a.created_at))
+
+  // Running balance: start from starting balance, apply all tx in date order
+  const sorted=[...tx].sort((a,b)=>new Date(a.date||a.created_at)-new Date(b.date||b.created_at))
+  const balMap={}
+  let running=startBal
+  sorted.forEach(t=>{
+    if(t.type==='income') running+=Number(t.amount)
+    else if(t.type==='expense') running-=Number(t.amount)
+    else if(t.type==='transfer_in') running+=Number(t.amount)
+    else if(t.type==='transfer_out') running-=Number(t.amount)
+    balMap[t.id]=running
+  })
+
+  const typeColor={income:'var(--green)',expense:'var(--red)',transfer:'var(--purple)'}
+  const typeIcon={income:'↑',expense:'↓',transfer:'⇌'}
+
+  document.getElementById('content').innerHTML=`
+    <div class="filter-bar">
+      <div class="filter-btns">
+        ${[['all','All'],['income','Income'],['expense','Expense'],['transfer_in','Transfer In'],['transfer_out','Transfer Out']].map(([f,label])=>`
+          <button class="btn-ghost${txFilter===f?' active':''}" onclick="setTxFilter('${f}')">${label}</button>`).join('')}
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-secondary" onclick="showEditBalance()" style="font-size:12px;padding:8px 14px">✎ Starting Balance: ${fmt(startBal)}</button>
+        <button class="btn-primary" onclick="showAddTx()">+ Add Transaction</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <div class="table-head" style="grid-template-columns:110px 1fr 150px 110px 110px 80px">
+        <span>Date</span><span>Description</span><span>Category</span><span style="text-align:right">Amount</span><span style="text-align:right">Balance</span><span></span>
+      </div>
+      ${filtered.length===0
+        ?`<div class="empty"><div class="empty-icon">⇄</div><div class="empty-title">No transactions found</div></div>`
+        :filtered.map((t,i)=>`
+        <div class="table-row" style="grid-template-columns:110px 1fr 150px 110px 110px 80px;animation:fadeIn 0.3s ease ${i*0.03}s both">
+          <span style="font-size:12px;color:var(--text-muted)">${fmtD(t.date||t.created_at)}</span>
+          <span style="font-size:13px">${t.description||'—'}${t.from_account||t.to_account?`<br><span style="font-size:11px;color:var(--text-muted)">${t.from_account?'From: '+t.from_account:''}${t.from_account&&t.to_account?' → ':''}${t.to_account?'To: '+t.to_account:''}</span>`:''}</span>
+          <span><span class="tag tag-${t.type.startsWith('transfer')?'transfer':t.type}">${t.category}</span></span>
+          <span style="text-align:right;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:${typeColor[t.type]||'var(--text-secondary)'}">
+            ${t.type==='income'?'+':t.type==='expense'?'-':'⇌'}${fmt(t.amount)}
+          </span>
+          <span style="text-align:right;font-family:'Syne',sans-serif;font-size:13px;color:${(balMap[t.id]??0)>=0?'var(--text-secondary)':'var(--red)'}">
+            ${fmt(balMap[t.id]??0)}
+          </span>
+          <span style="text-align:right;display:flex;gap:4px;justify-content:flex-end">
+            <button class="btn-ghost" style="padding:5px 8px;font-size:12px;color:var(--text-muted)" onclick="showEditTx(${t.id})">✎</button>
+            <button class="btn-danger" onclick="delTx(${t.id})">⌫</button>
+          </span>
+        </div>`).join('')}
+    </div>`
+}
+
+function setTxFilter(f){ txFilter=f; renderTransactions() }
+function delTx(id){ DB.delTx(id); renderTransactions(); updateTopbar() }
+
+function showAddTx(){
+  let type='income'
+
+  const renderCatSection=()=>{
+    const wrap=document.getElementById('cat-section')
+    if(wrap){ wrap.innerHTML=catSelectHTML(type,'tx-cat'); watchCatSelect('tx-cat') }
+  }
+
+  showModal(`
+    <div class="modal-header">
+      <span class="modal-title">New Transaction</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="type-toggle">
+      <button class="type-btn income active" id="btn-income" onclick="setTxType('income')">↑ Income</button>
+      <button class="type-btn expense" id="btn-expense" onclick="setTxType('expense')">↓ Expense</button>
+      <button class="type-btn transfer" id="btn-transfer_in" onclick="setTxType('transfer_in')">⇌↑ In</button>
+      <button class="type-btn transfer" id="btn-transfer_out" onclick="setTxType('transfer_out')">⇌↓ Out</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Amount</label><input type="number" id="tx-amt" placeholder="0.00" step="0.01"/></div>
+      <div class="form-group"><label class="form-label">Date</label><input type="date" id="tx-date" value="${new Date().toISOString().split('T')[0]}"/></div>
+    </div>
+    <div class="form-group"><label class="form-label">Category</label><div id="cat-section">${catSelectHTML('income','tx-cat')}</div></div>
+    <div id="transfer-fields" style="display:none">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">From Account</label><input type="text" id="tx-from" placeholder="e.g. Checking"/></div>
+        <div class="form-group"><label class="form-label">To Account</label><input type="text" id="tx-to" placeholder="e.g. Savings"/></div>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Description</label><input type="text" id="tx-desc" placeholder="Optional note..."/></div>
+    <div class="form-actions">
+      <button class="btn-secondary" style="flex:1" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" style="flex:2" onclick="saveTx()">Add Transaction</button>
+    </div>`)
+
+  watchCatSelect('tx-cat')
+
+  window.setTxType=function(t){
+    type=t
+    ;['income','expense','transfer_in','transfer_out'].forEach(x=>{
+      const el=document.getElementById('btn-'+x)
+      if(el) el.className=`type-btn ${x.startsWith('transfer')?'transfer':x}${t===x?' active':''}`
+    })
+    renderCatSection()
+    document.getElementById('transfer-fields').style.display=(t==='transfer_in'||t==='transfer_out')?'block':'none'
+  }
+
+  window.saveTx=function(){
+    const amt=parseFloat(document.getElementById('tx-amt').value)
+    const cat=document.getElementById('tx-cat').value
+    if(!amt||!cat||cat==='__custom__') return
+    const entry={type,amount:amt,category:cat,description:document.getElementById('tx-desc').value,date:document.getElementById('tx-date').value}
+    if(type==='transfer_in'||type==='transfer_out'){
+      entry.from_account=document.getElementById('tx-from').value
+      entry.to_account=document.getElementById('tx-to').value
+    }
+    DB.addTx(entry)
+    closeModal(); renderTransactions(); updateTopbar()
+  }
+}
+
+
+// ── Edit Transaction ──────────────────────────────────────────────────────────
+function showEditTx(id){
+  const t=DB.transactions().find(t=>t.id===id)
+  if(!t) return
+  let type=t.type
+
+  const renderCatSection=()=>{
+    const wrap=document.getElementById('cat-section')
+    if(!wrap) return
+    wrap.innerHTML=catSelectHTML(type,'tx-cat')
+    const sel=document.getElementById('tx-cat')
+    if(sel){
+      const exists=[...sel.options].some(o=>o.value===t.category)
+      if(!exists){
+        const opt=document.createElement('option')
+        opt.value=t.category; opt.textContent=t.category
+        sel.insertBefore(opt, sel.querySelector('option[value="__custom__"]'))
+      }
+      sel.value=type===t.type?t.category:''
+    }
+    watchCatSelect('tx-cat')
+  }
+
+  showModal(`
+    <div class="modal-header">
+      <span class="modal-title">Edit Transaction</span>
+      <button class="modal-close" onclick="closeModal()">&#x2715;</button>
+    </div>
+    <div class="type-toggle">
+      <button class="type-btn income${type==='income'?' active':''}" id="btn-income" onclick="setEditType('income')">&#x2191; Income</button>
+      <button class="type-btn expense${type==='expense'?' active':''}" id="btn-expense" onclick="setEditType('expense')">&#x2193; Expense</button>
+      <button class="type-btn transfer${type==='transfer_in'?' active':''}" id="btn-transfer_in" onclick="setEditType('transfer_in')">&#x21CC;&#x2191; In</button>
+      <button class="type-btn transfer${type==='transfer_out'?' active':''}" id="btn-transfer_out" onclick="setEditType('transfer_out')">&#x21CC;&#x2193; Out</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Amount</label><input type="number" id="tx-amt" value="${t.amount}" step="0.01"/></div>
+      <div class="form-group"><label class="form-label">Date</label><input type="date" id="tx-date" value="${t.date||t.created_at?.split('T')[0]||''}"/></div>
+    </div>
+    <div class="form-group"><label class="form-label">Category</label><div id="cat-section">${catSelectHTML(type,'tx-cat')}</div></div>
+    <div id="transfer-fields" style="display:${(type==='transfer_in'||type==='transfer_out')?'block':'none'}">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">From Account</label><input type="text" id="tx-from" value="${t.from_account||''}" placeholder="e.g. Checking"/></div>
+        <div class="form-group"><label class="form-label">To Account</label><input type="text" id="tx-to" value="${t.to_account||''}" placeholder="e.g. Savings"/></div>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Description</label><input type="text" id="tx-desc" value="${t.description||''}" placeholder="Optional note..."/></div>
+    <div class="form-actions">
+      <button class="btn-secondary" style="flex:1" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" style="flex:2" onclick="saveEditTx(${id})">Save Changes</button>
+    </div>`)
+
+  renderCatSection()
+
+  window.setEditType=function(newType){
+    type=newType
+    ;['income','expense','transfer_in','transfer_out'].forEach(x=>{
+      const el=document.getElementById('btn-'+x)
+      if(el) el.className=`type-btn ${x.startsWith('transfer')?'transfer':x}${newType===x?' active':''}`
+    })
+    renderCatSection()
+    document.getElementById('transfer-fields').style.display=(newType==='transfer_in'||newType==='transfer_out')?'block':'none'
+  }
+
+  window.saveEditTx=function(id){
+    const amt=parseFloat(document.getElementById('tx-amt').value)
+    const cat=document.getElementById('tx-cat').value
+    if(!amt||!cat||cat==='__custom__') return
+    const changes={type,amount:amt,category:cat,description:document.getElementById('tx-desc').value,date:document.getElementById('tx-date').value}
+    if(type==='transfer_in'||type==='transfer_out'){
+      changes.from_account=document.getElementById('tx-from').value
+      changes.to_account=document.getElementById('tx-to').value
+    } else {
+      changes.from_account=''; changes.to_account=''
+    }
+    DB.updateTx(id, changes)
+    closeModal(); renderTransactions(); updateTopbar()
+  }
+}
+
+// ── Invoices ──────────────────────────────────────────────────────────────────
+let invFilter='all'
+function renderInvoices(){
+  const inv=DB.invoices()
+  const filtered=inv.filter(i=>invFilter==='all'||i.status===invFilter)
+    .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))
+
+  document.getElementById('content').innerHTML=`
+    <div class="filter-bar">
+      <div class="filter-btns">
+        ${['all','pending','paid'].map(f=>`<button class="btn-ghost${invFilter===f?' active':''}" onclick="setInvFilter('${f}')" style="text-transform:capitalize">${f}</button>`).join('')}
+      </div>
+      <button class="btn-primary" onclick="showAddInv()">+ New Invoice</button>
+    </div>
+    <div class="inv-grid">
+      ${filtered.length===0?`<div class="empty" style="grid-column:1/-1"><div class="empty-icon">◫</div><div class="empty-title">No invoices found</div></div>`
+        :filtered.map((inv,i)=>`
+        <div class="inv-card" style="animation-delay:${i*0.05}s">
+          <div class="inv-glow" style="background:${inv.status==='paid'?'rgba(46,204,138,0.08)':'rgba(201,168,76,0.08)'}"></div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+            <div><div class="inv-client">${inv.client}</div><div class="inv-num">INV-${String(inv.id).slice(-4).padStart(4,'0')}</div></div>
+            <span class="tag tag-${inv.status}">${inv.status}</span>
+          </div>
+          ${inv.description?`<div class="inv-desc">${inv.description}</div>`:''}
+          <div class="inv-amount">${fmt(inv.amount)}</div>
+          ${inv.due_date?`<div class="inv-due">Due: ${fmtD(inv.due_date)}</div>`:''}
+          <div class="inv-actions">
+            ${inv.status==='pending'
+              ?`<button class="btn-primary" style="flex:1;font-size:12px;padding:8px" onclick="updateInv(${inv.id},'paid')">✓ Mark Paid</button>`
+              :`<button class="btn-secondary" style="flex:1;font-size:12px;padding:8px" onclick="updateInv(${inv.id},'pending')">↩ Mark Pending</button>`}
+            <button class="btn-danger" onclick="delInv(${inv.id})">⌫</button>
+          </div>
+        </div>`).join('')}
+    </div>`
+}
+
+function setInvFilter(f){ invFilter=f; renderInvoices() }
+function updateInv(id,status){ DB.updateInv(id,status); renderInvoices(); updateTopbar() }
+function delInv(id){ DB.delInv(id); renderInvoices(); updateTopbar() }
+
+function showAddInv(){
+  showModal(`
+    <div class="modal-header">
+      <span class="modal-title">New Invoice</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="form-group"><label class="form-label">Client Name</label><input type="text" id="inv-client" placeholder="Acme Corp"/></div>
+    <div class="form-group"><label class="form-label">Description</label><input type="text" id="inv-desc" placeholder="Services rendered..."/></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Amount</label><input type="number" id="inv-amt" placeholder="0.00"/></div>
+      <div class="form-group"><label class="form-label">Due Date</label><input type="date" id="inv-due"/></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-secondary" style="flex:1" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" style="flex:2" onclick="saveInv()">Create Invoice</button>
+    </div>`)
+  window.saveInv=function(){
+    const client=document.getElementById('inv-client').value
+    const amt=parseFloat(document.getElementById('inv-amt').value)
+    if(!client||!amt) return
+    DB.addInv({client,description:document.getElementById('inv-desc').value,amount:amt,due_date:document.getElementById('inv-due').value})
+    closeModal(); renderInvoices(); updateTopbar()
+  }
+}
+
+// ── Reports ───────────────────────────────────────────────────────────────────
+function renderReports(){
+  const tx=DB.transactions(),inv=DB.invoices()
+  const startBal=DB.getStartingBalance()
+  const income=tx.filter(t=>t.type==='income').reduce((s,t)=>s+Number(t.amount),0)
+  const expenses=tx.filter(t=>t.type==='expense').reduce((s,t)=>s+Number(t.amount),0)
+  const profit=income-expenses
+  const currentBal=startBal+profit
+  const margin=income>0?((profit/income)*100).toFixed(1):0
+
+  const incByCat={}
+  tx.filter(t=>t.type==='income').forEach(t=>{ incByCat[t.category]=(incByCat[t.category]??0)+Number(t.amount) })
+
+  const monthly={}
+  tx.forEach(t=>{ const d=new Date(t.date||t.created_at); const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; if(!monthly[k]) monthly[k]={income:0,expense:0}; if(t.type!=='transfer_in'&&t.type!=='transfer_out') monthly[k][t.type]+=Number(t.amount) })
+  const monthEntries=Object.entries(monthly).sort((a,b)=>a[0].localeCompare(b[0])).slice(-6)
+  const maxMonth=Math.max(...monthEntries.flatMap(([,d])=>[d.income,d.expense]),1)
+
+  const paidInv=inv.filter(i=>i.status==='paid').reduce((s,i)=>s+Number(i.amount),0)
+  const pendInv=inv.filter(i=>i.status==='pending').reduce((s,i)=>s+Number(i.amount),0)
+
+  document.getElementById('content').innerHTML=`
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-title">Profit & Loss Statement</div>
+      <div class="report-grid">
+        ${[
+          {label:'Starting Balance',value:fmt(startBal),color:'var(--text-secondary)'},
+          {label:'Gross Income',value:fmt(income),color:'var(--green)'},
+          {label:'Total Expenses',value:fmt(expenses),color:'var(--red)'},
+          {label:'Current Balance',value:fmt(currentBal),color:currentBal>=0?'var(--gold)':'var(--red)'},
+        ].map(s=>`<div class="report-stat"><div class="report-stat-label">${s.label}</div><div class="report-stat-value" style="color:${s.color}">${s.value}</div></div>`).join('')}
+      </div>
+      <div style="display:flex;gap:12px;margin-top:4px">
+        ${[
+          {label:'Net Profit',value:fmt(profit),color:profit>=0?'var(--green)':'var(--red)'},
+          {label:'Profit Margin',value:`${margin}%`,color:'var(--gold)'},
+        ].map(s=>`<div class="report-stat" style="flex:1"><div class="report-stat-label">${s.label}</div><div class="report-stat-value" style="color:${s.color}">${s.value}</div></div>`).join('')}
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Monthly Trend</div>
+        ${monthEntries.length===0?`<div class="empty"><div class="empty-icon">▤</div><div class="empty-title">No data yet</div></div>`
+          :monthEntries.map(([month,data])=>`
+          <div class="month-row">
+            <div class="month-label">${month}</div>
+            <div class="month-bars">
+              <div class="month-tracks">
+                <div class="month-bar"><div class="month-bar-fill" style="width:${(data.income/maxMonth)*100}%;background:var(--green)"></div></div>
+                <div class="month-bar"><div class="month-bar-fill" style="width:${(data.expense/maxMonth)*100}%;background:var(--red)"></div></div>
+              </div>
+              <div class="month-vals">
+                <div style="color:var(--green)">+${fmt(data.income)}</div>
+                <div style="color:var(--red)">-${fmt(data.expense)}</div>
+              </div>
+            </div>
+          </div>`).join('')}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card" style="flex:1">
+          <div class="card-title">Income Sources</div>
+          ${Object.entries(incByCat).length===0?`<div class="empty" style="padding:20px"><div class="empty-title">No income yet</div></div>`
+            :Object.entries(incByCat).map(([cat,amt])=>`
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+              <span style="font-size:13px;color:var(--text-secondary)">${cat}</span>
+              <span style="font-size:13px;font-weight:500;color:var(--green)">${fmt(amt)}</span>
+            </div>`).join('')}
+        </div>
+        <div class="card">
+          <div class="card-title">Invoice Summary</div>
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:13px;color:var(--text-secondary)">Paid</span>
+            <span style="font-size:13px;font-weight:500;color:var(--green)">${fmt(paidInv)}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:8px 0">
+            <span style="font-size:13px;color:var(--text-secondary)">Outstanding</span>
+            <span style="font-size:13px;font-weight:500;color:var(--gold)">${fmt(pendInv)}</span>
+          </div>
+        </div>
+      </div>
+    </div>`
+}
+
+
+// ── Export / Import ───────────────────────────────────────────────────────────
+function exportData(){
+  const date=new Date().toISOString().split('T')[0]
+  const tx=DB.transactions(), inv=DB.invoices()
+
+  showModal(`
+    <div class="modal-header">
+      <span class="modal-title">Export Backup</span>
+      <button class="modal-close" onclick="closeModal()">&#x2715;</button>
+    </div>
+    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:20px;line-height:1.7">
+      This backup contains <strong style="color:var(--text-primary)">${tx.length} transactions</strong> and
+      <strong style="color:var(--text-primary)">${inv.length} invoices</strong>.
+      Choose a file name and your browser will ask where to save it.
+    </p>
+    <div class="form-group">
+      <label class="form-label">File Name</label>
+      <div style="display:flex;align-items:center;gap:0">
+        <input type="text" id="export-filename" value="ledger-backup-${date}" style="border-radius:var(--radius) 0 0 var(--radius);border-right:none"/>
+        <span style="background:var(--bg-elevated);border:1px solid var(--border);border-left:none;padding:10px 12px;border-radius:0 var(--radius) var(--radius) 0;color:var(--text-muted);font-size:13px;white-space:nowrap">.json</span>
+      </div>
+    </div>
+    <div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.15);border-radius:var(--radius);padding:12px 14px;margin-bottom:20px">
+      <div style="font-size:12px;color:var(--gold);margin-bottom:3px">&#128161; Tip</div>
+      <div style="font-size:12px;color:var(--text-secondary)">After clicking Export, your browser will prompt you to choose where to save the file. Pick a safe location like Desktop, Documents, or Google Drive.</div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-secondary" style="flex:1" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" style="flex:2" onclick="confirmExport()">&#x2193; Export</button>
+    </div>`)
+
+  window.confirmExport=function(){
+    const filename=(document.getElementById('export-filename').value||'ledger-backup').trim().replace(/[^a-zA-Z0-9_\-]/g,'_')
+    const data={
+      version:'1.2.0',
+      exportedAt:new Date().toISOString(),
+      startingBalance:DB.getStartingBalance(),
+      customCategories:DB.getCustomCategories(),
+      transactions:DB.transactions(),
+      invoices:DB.invoices()
+    }
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'})
+    const url=URL.createObjectURL(blob)
+    const a=document.createElement('a')
+    a.href=url; a.download=`${filename}.json`; a.click()
+    URL.revokeObjectURL(url)
+    closeModal()
+    showToast('&#x2713; Exported as '+filename+'.json')
+  }
+}
+
+function importData(){
+  document.getElementById('import-file').click()
+}
+
+function handleImportFile(e){
+  const file=e.target.files[0]
+  if(!file) return
+  const reader=new FileReader()
+  reader.onload=function(ev){
+    try{
+      const data=JSON.parse(ev.target.result)
+      // Validate it looks like our data
+      if(!data.transactions||!data.invoices) throw new Error('Invalid backup file')
+
+      showModal(`
+        <div class="modal-header">
+          <span class="modal-title">Import Backup</span>
+          <button class="modal-close" onclick="closeModal()">&#x2715;</button>
+        </div>
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;line-height:1.7">
+          This backup contains <strong style="color:var(--text-primary)">${data.transactions.length} transactions</strong> and
+          <strong style="color:var(--text-primary)">${data.invoices.length} invoices</strong>
+          exported on <strong style="color:var(--text-primary)">${data.exportedAt?new Date(data.exportedAt).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}):'unknown date'}</strong>.
+        </p>
+        <div style="background:rgba(224,90,90,0.08);border:1px solid rgba(224,90,90,0.2);border-radius:var(--radius);padding:14px;margin-bottom:20px">
+          <div style="font-size:12px;color:var(--red);font-weight:500;margin-bottom:4px">⚠ This will replace all current data</div>
+          <div style="font-size:12px;color:var(--text-secondary)">Your existing transactions, invoices, and settings will be overwritten. Export first if you want to keep them.</div>
+        </div>
+        <div class="form-actions">
+          <button class="btn-secondary" style="flex:1" onclick="closeModal()">Cancel</button>
+          <button class="btn-primary" style="flex:2;background:var(--red)" onclick="confirmImport()">Replace & Import</button>
+        </div>`)
+
+      window.confirmImport=function(){
+        if(data.startingBalance!==undefined) DB.setStartingBalance(data.startingBalance)
+        if(data.customCategories) LS.set('lf_custom_cats', data.customCategories)
+        LS.set('lf_tx', data.transactions)
+        LS.set('lf_inv', data.invoices)
+        closeModal()
+        renderPage()
+        showToast('✓ Data imported successfully')
+      }
+    } catch(err){
+      showToast('✗ Invalid backup file — could not import', true)
+    }
+    // reset so same file can be imported again
+    e.target.value=''
+  }
+  reader.readAsText(file)
+}
+
+// ── Toast notification ────────────────────────────────────────────────────────
+function showToast(msg, isError=false){
+  const existing=document.getElementById('toast')
+  if(existing) existing.remove()
+  const toast=document.createElement('div')
+  toast.id='toast'
+  toast.textContent=msg
+  toast.style.cssText=`
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+    background:${isError?'var(--red)':'var(--green)'};
+    color:${isError?'#fff':'#0A0A0B'};
+    padding:10px 22px;border-radius:20px;font-family:'DM Mono',monospace;
+    font-size:13px;font-weight:500;z-index:9999;
+    box-shadow:0 4px 20px rgba(0,0,0,0.4);
+    animation:fadeIn 0.3s ease;
+  `
+  document.body.appendChild(toast)
+  setTimeout(()=>{ toast.style.opacity='0'; toast.style.transition='opacity 0.4s'; setTimeout(()=>toast.remove(),400) }, 2500)
+}
+
+// ── Router ────────────────────────────────────────────────────────────────────
+function renderPage(){
+  updateTopbar()
+  if(currentPage==='dashboard') renderDashboard()
+  else if(currentPage==='transactions') renderTransactions()
+  else if(currentPage==='invoices') renderInvoices()
+  else if(currentPage==='reports') renderReports()
+}
+
+renderNav()
+renderPage()
+</script>
+</body>
+</html>
